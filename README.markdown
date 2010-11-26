@@ -41,5 +41,5 @@ License
 
 NUnit Color Console is released under the MIT license.
 
-[with]:    http://github.com/remi/nunit-color-console/raw/master/examples/with-color.png
-[without]: http://github.com/remi/nunit-color-console/raw/master/examples/without-color.png
+[with]:    https://github.com/remi/nunit-color-console/raw/master/examples/with-color.png
+[without]: https://github.com/remi/nunit-color-console/raw/master/examples/without-color.png
