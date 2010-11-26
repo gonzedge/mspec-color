@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--This file represents the results of running a test suite-->
+<test-results name="SomeTests.dll" total="4" failures="2" not-run="2" date="2010-11-26" time="15:39:00">
+  <environment nunit-version="2.4.7.0" clr-version="2.0.50727.1433" os-version="Unix 2.6.32.25" platform="Unix" cwd="/home/remi/projects/remi/nunit-color-console/examples" machine-name="ninamori" user="remi" user-domain="ninamori" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite name="SomeTests.dll" success="False" time="0.103" asserts="0">
+    <results>
+      <test-suite name="SomeTests" success="False" time="0.050" asserts="0">
+        <results>
+          <test-case name="SomeTests.FirstFail" executed="True" success="False" time="0.009" asserts="0">
+            <failure>
+              <message><![CDATA[That is why you fail]]></message>
+              <stack-trace><![CDATA[at SomeTests.FirstFail () [0x00000] in <filename unknown>:0
+at (wrapper managed-to-native) System.Reflection.MonoMethod:InternalInvoke (object,object[],System.Exception&)
+at System.Reflection.MonoMethod.Invoke (System.Object obj, BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x00000] in <filename unknown>:0
+]]></stack-trace>
+            </failure>
+          </test-case>
+          <test-case name="SomeTests.FirstPass" executed="True" success="True" time="0.001" asserts="1" />
+          <test-case name="SomeTests.SecondPass" executed="True" success="True" time="0.000" asserts="1" />
+          <test-case name="SomeTests.SecondsFail" executed="True" success="False" time="0.000" asserts="0">
+            <failure>
+              <message><![CDATA[This is also why you fail]]></message>
+              <stack-trace><![CDATA[at SomeTests.SecondsFail () [0x00000] in <filename unknown>:0
+at (wrapper managed-to-native) System.Reflection.MonoMethod:InternalInvoke (object,object[],System.Exception&)
+at System.Reflection.MonoMethod.Invoke (System.Object obj, BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x00000] in <filename unknown>:0
+]]></stack-trace>
+            </failure>
+          </test-case>
+          <test-case name="SomeTests.ShouldAlsoEventuallyTestStuff" executed="False">
+            <reason>
+              <message><![CDATA[]]></message>
+            </reason>
+          </test-case>
+          <test-case name="SomeTests.ShouldEventuallyTestStuff" executed="False">
+            <reason>
+              <message><![CDATA[Not ready ...]]></message>
+            </reason>
+          </test-case>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
