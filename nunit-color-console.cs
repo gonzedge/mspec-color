@@ -44,6 +44,7 @@ public class NUnitColorConsole {
         String summary        = null;
         while ((output = process.StandardOutput.ReadLine()) != null || (process.HasExited == false)) {
             match = null;
+            if (output == null) continue; // the process is still running, but we got bupkis!
 
             // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
             //
