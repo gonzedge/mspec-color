@@ -31,6 +31,8 @@ Running It
 Any arguments you pass to nunit-color-console.exe get passed straight to nunit-console.exe.  So if can alias 'nunit-console' 
 on your system to 'nunit-color-console' and commands like `nunit-console /?` will still run fine.
 
+By default, `nunit-console` is run.  If you need to set the path to the nunit-console executable to be run, you can set the `NUNIT_CONSOLE` environment variable.  If it's found, it will run that instead of simply assuming that `nunit-console` is in your PATH and will run fine.
+
 That's it!
 ----------
 

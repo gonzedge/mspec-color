@@ -18,9 +18,16 @@ public class NUnitColorConsole {
         process.WaitForExit();
     }
 
+    static string GetNunitConsoleCommand() {
+        if (Environment.GetEnvironmentVariable("NUNIT_CONSOLE") != null)
+            return Environment.GetEnvironmentVariable("NUNIT_CONSOLE");
+        else
+            return "nunit-console";
+    }
+
     static Process GetProcess(string[] args) {
         var process = new System.Diagnostics.Process();
-        process.StartInfo.FileName               = "nunit-console";
+        process.StartInfo.FileName               = GetNunitConsoleCommand();
         process.StartInfo.Arguments              = String.Join(" ", args);
         process.StartInfo.UseShellExecute        = false;
         process.StartInfo.RedirectStandardOutput = true;
