@@ -4,13 +4,20 @@ using System.Text.RegularExpressions;
 
 public class NUnitColorConsole {
 
+    // NUnit 2.4.7 displays the summary on 1 line
+    static string SummaryLine  = @"^Tests run: (\d+), Failures: (\d+), Not run: (\d+), Time: .* seconds$";
+
+    // NUnit 2.5.8 displays the summary on 2 lines
+    static string SummaryLine1 = @"^Tests run: (\d+), Errors: \d+, Failures: (\d+), Inconclusive: \d+, Time: .* seconds$";
+    static string SummaryLine2 = @"^  Not run: \d+, Invalid: \d+, Ignored: (\d+), Skipped: \d+$";
+
     public static void Main(string[] args) {
         var process = GetProcess(args);
         process.Start();
         ProcessOutput(process);
         process.WaitForExit();
     }
-    
+
     static Process GetProcess(string[] args) {
         var process = new System.Diagnostics.Process();
         process.StartInfo.FileName               = "nunit-console";
@@ -27,11 +34,15 @@ public class NUnitColorConsole {
         bool testsNotRun      = false;
         String output         = null;
         Match  match          = null;
+        String summary        = null;
         while ((output = process.StandardOutput.ReadLine()) != null || (process.HasExited == false)) {
             match = null;
 
             // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
-            if ((match = Regex.Match(output, @"^Tests run: (\d+), Failures: (\d+), Not run: (\d+), Time: .* seconds$")).Success) {
+            //
+            //   Tests run: 7, Failures: 1, Not run: 8, Time: 0.411 seconds
+            //
+            if ((match = Regex.Match(output, SummaryLine)).Success) {
                 var run     = int.Parse(match.Groups[1].Value);
                 var fails   = int.Parse(match.Groups[2].Value);
                 var pending = int.Parse(match.Groups[3].Value);
@@ -43,13 +54,37 @@ public class NUnitColorConsole {
                 Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
 
+            // Some versions of NUnit console print out the summary on 2 lines, using different verbiage
+            //  
+            //   Tests run: 7, Errors: 0, Failures: 1, Inconclusive: 0, Time: 0.2217072 seconds
+            //     Not run: 8, Invalid: 0, Ignored: 8, Skipped: 0
+            //   
+            } else if ((match = Regex.Match(output, SummaryLine1)).Success) {
+                summary = output; // we can't print out the results until we read the second line of the summary
+
+            // The second line of the summary (in some versions of NUnit console)
+            } else if ((match = Regex.Match(output, SummaryLine2)).Success) {
+                var summaryMatch = Regex.Match(summary, SummaryLine1);
+
+                var run     = int.Parse(summaryMatch.Groups[1].Value);
+                var fails   = int.Parse(summaryMatch.Groups[2].Value);
+                var pending = int.Parse(match.Groups[1].Value);
+
+                if      (fails > 0) Console.ForegroundColor = ConsoleColor.Red;
+                else if (run > 0)   Console.ForegroundColor = ConsoleColor.Green;
+                else                Console.ForegroundColor = ConsoleColor.Yellow;
+
+                Console.WriteLine(summary);
+                Console.WriteLine(output);
+                Console.ForegroundColor = ConsoleColor.White;
+
             // The following lines are all going to be the tests that were not run, so set testsNotRun = true
-            } else if (output == "Tests not run:") {
+            } else if (output == "Tests not run:" || output == "Tests Not Run:") {
                 Console.WriteLine(output);
                 testsNotRun = true;
 
             // The following lines are all going to be the test case failures
-            } else if (output == "Test Case Failures:") {
+            } else if (output == "Test Case Failures:" || output == "Errors and Failures:") {
                 Console.WriteLine(output);
                 testCaseFailures = true;
 
@@ -60,6 +95,12 @@ public class NUnitColorConsole {
                     var testNumber   = match.Groups[1].Value;
                     var testName     = match.Groups[2].Value;
                     var ignoreReason = match.Groups[3].Value;
+
+                    // on some versions of NUnit console, it displays 1) Ignored : TestName
+                    if (testName == "Ignored") {
+                        testName     = ignoreReason;
+                        ignoreReason = "";
+                    }
 
                     // Set a default [Ignore] reason if the user didn't specify one
                     if (ignoreReason.Trim().Length == 0)
