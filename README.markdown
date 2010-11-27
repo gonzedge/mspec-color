@@ -8,8 +8,6 @@ It's REALLY annoying, however, that nunit-console.exe doesn't color its output. 
 
 So I made this quick and dirty script to wrap nunit-console.exe and print out colors.
 
-## NOTE: Does not appear to work in Windows (yet) ... I'll be fixing it momentarily!
-
 ### With Colors
 
 ![Screenshot With Colors][with]
