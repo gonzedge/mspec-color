@@ -8,6 +8,8 @@ It's REALLY annoying, however, that nunit-console.exe doesn't color its output. 
 
 So I made this quick and dirty script to wrap nunit-console.exe and print out colors.
 
+[Download nunit-color-console.exe][download]
+
 ### With Colors
 
 ![Screenshot With Colors][with]
@@ -43,5 +45,6 @@ License
 
 NUnit Color Console is released under the MIT license.
 
-[with]:    https://github.com/remi/nunit-color-console/raw/master/examples/with-color.png
-[without]: https://github.com/remi/nunit-color-console/raw/master/examples/without-color.png
+[with]:     https://github.com/remi/nunit-color-console/raw/master/examples/with-color.png
+[without]:  https://github.com/remi/nunit-color-console/raw/master/examples/without-color.png
+[download]: https://github.com/remi/nunit-color-console/raw/master/nunit-color-console.exe
