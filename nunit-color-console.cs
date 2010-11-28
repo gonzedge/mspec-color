@@ -8,7 +8,7 @@ public class NUnitColorConsole {
     static string SummaryLine  = @"^Tests run: (\d+), Failures: (\d+), Not run: (\d+), Time: .* seconds$";
 
     // NUnit 2.5.8 displays the summary on 2 lines
-    static string SummaryLine1 = @"^Tests run: (\d+), Errors: \d+, Failures: (\d+), Inconclusive: \d+, Time: .* seconds$";
+    static string SummaryLine1 = @"^Tests run: (\d+), Errors: (\d+), Failures: (\d+), Inconclusive: \d+, Time: .* seconds$";
     static string SummaryLine2 = @"^  Not run: \d+, Invalid: \d+, Ignored: (\d+), Skipped: \d+$";
 
     public static void Main(string[] args) {
@@ -75,12 +75,13 @@ public class NUnitColorConsole {
                 var summaryMatch = Regex.Match(summary, SummaryLine1);
 
                 var run     = int.Parse(summaryMatch.Groups[1].Value);
-                var fails   = int.Parse(summaryMatch.Groups[2].Value);
+                var errors  = int.Parse(summaryMatch.Groups[2].Value);
+                var fails   = int.Parse(summaryMatch.Groups[3].Value);
                 var pending = int.Parse(match.Groups[1].Value);
 
-                if      (fails > 0) Console.ForegroundColor = ConsoleColor.Red;
-                else if (run > 0)   Console.ForegroundColor = ConsoleColor.Green;
-                else                Console.ForegroundColor = ConsoleColor.Yellow;
+                if      (errors > 0 || fails > 0) Console.ForegroundColor = ConsoleColor.Red;
+                else if (run > 0)                 Console.ForegroundColor = ConsoleColor.Green;
+                else                              Console.ForegroundColor = ConsoleColor.Yellow;
 
                 Console.WriteLine(summary);
                 Console.WriteLine(output);
