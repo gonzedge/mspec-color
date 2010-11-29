@@ -37,14 +37,31 @@ public class NUnitColorConsole {
     }
 
     static void ProcessOutput(Process process) {
-        bool testCaseFailures = false;
-        bool testsNotRun      = false;
-        String output         = null;
-        Match  match          = null;
-        String summary        = null;
+        bool summaryHasPrinted = false;
+        int timesOutputWasNull = 0;
+        int waitTime           = 100;
+        int maxTimesToWait     = 30; // wait 3 seconds for some output
+        bool testCaseFailures  = false;
+        bool testsNotRun       = false;
+        String output          = null;
+        Match  match           = null;
+        String summary         = null;
         while ((output = process.StandardOutput.ReadLine()) != null || (process.HasExited == false)) {
             match = null;
-            if (output == null) continue; // the process is still running, but we got bupkis!
+
+            // If we're no longer reading any input and the summary has been printed ... let's get 
+            // ready to stop if things stop responding!
+            if (output == null && summaryHasPrinted) {
+                Console.WriteLine("!!! summary has printed and we got no output ...");
+                timesOutputWasNull++;
+                if (timesOutputWasNull >= maxTimesToWait)
+                    break; // nunit-console is probably done!
+                else {
+                    System.Threading.Thread.Sleep(waitTime);
+                    continue; 
+                }
+            } else
+                timesOutputWasNull = 0;
 
             // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
             //
@@ -61,6 +78,7 @@ public class NUnitColorConsole {
 
                 Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
+                summaryHasPrinted = true;
 
             // Some versions of NUnit console print out the summary on 2 lines, using different verbiage
             //  
@@ -86,6 +104,7 @@ public class NUnitColorConsole {
                 Console.WriteLine(summary);
                 Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
+                summaryHasPrinted = true;
 
             // The following lines are all going to be the tests that were not run, so set testsNotRun = true
             } else if (output == "Tests not run:" || output == "Tests Not Run:") {
