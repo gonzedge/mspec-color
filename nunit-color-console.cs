@@ -5,8 +5,9 @@ using System.Text.RegularExpressions;
 
 public class NUnitColorConsole {
 
+    static bool     allTestsPassed       = false;
     static bool     summaryHasPrinted    = false;
-    static int      msToWaitAfterSummary = 3000;
+    static int      msToWaitAfterSummary = 2000;
     static DateTime lastLinePrintedAt    = DateTime.MinValue;
     static Process  process              = null;
     static Thread   outputProcessor      = null;
@@ -40,16 +41,24 @@ public class NUnitColorConsole {
     //
     static void WaitForExit() {
         while (outputProcessor.IsAlive && ! summaryHasPrinted)
-            Thread.Sleep(100); // hang out and wait ...
+            Thread.Sleep(100); // hang out and wait for the summary to print (or the thread to finish)
 
         while (summaryHasPrinted && outputProcessor.IsAlive && MsSinceLastLinePrinted < msToWaitAfterSummary) {
             Console.WriteLine("summary has printed and we're still processing ... waiting ... {0} since last line", MsSinceLastLinePrinted);
             Thread.Sleep(100);
         }
 
-        // Everything should be done!  Let's kill the thread and exit once it's aborted
-        outputProcessor.Abort();
-        outputProcessor.Join();
+        // Everything should be done!  Let's tell the Thread that we're aborting it and give it 1 second to finish up ... then exit!
+        if (outputProcessor.IsAlive) {
+            outputProcessor.Abort();
+            Thread.Sleep(1000);
+        }
+
+        // Exit with non-0 exit code unless all of the tests passed
+        if (allTestsPassed)
+            Environment.Exit(0);
+        else
+            Environment.Exit(1);
     }
 
     static long MsSinceLastLinePrinted { get { return (DateTime.Now.Subtract(lastLinePrintedAt).Ticks / 10000); }}
@@ -95,6 +104,8 @@ public class NUnitColorConsole {
                 else if (run > 0)   Console.ForegroundColor = ConsoleColor.Green;
                 else                Console.ForegroundColor = ConsoleColor.Yellow;
 
+                if (Console.ForegroundColor == ConsoleColor.Green) allTestsPassed = true;
+
                 Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
                 summaryHasPrinted       = true;
@@ -119,6 +130,8 @@ public class NUnitColorConsole {
                 if      (errors > 0 || fails > 0) Console.ForegroundColor = ConsoleColor.Red;
                 else if (run > 0)                 Console.ForegroundColor = ConsoleColor.Green;
                 else                              Console.ForegroundColor = ConsoleColor.Yellow;
+
+                if (Console.ForegroundColor == ConsoleColor.Green) allTestsPassed = true;
 
                 Console.WriteLine(summary);
                 Console.WriteLine(output);
