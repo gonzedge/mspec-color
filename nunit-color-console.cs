@@ -75,6 +75,7 @@ public class NUnitColorConsole {
         Match  match          = null;
         String summary        = null;
         while ((output = process.StandardOutput.ReadLine()) != null) {
+            Console.WriteLine("OUTPUT: {0}", output);
             match             = null;
             lastLinePrintedAt = DateTime.Now;
             if (summaryHasPrinted) {
