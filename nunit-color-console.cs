@@ -1,8 +1,15 @@
 using System;
+using System.Threading;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 public class NUnitColorConsole {
+
+    static bool     summaryHasPrinted    = false;
+    static int      msToWaitAfterSummary = 3000;
+    static DateTime lastLinePrintedAt    = DateTime.MinValue;
+    static Process  process              = null;
+    static Thread   outputProcessor      = null;
 
     // NUnit 2.4.7 displays the summary on 1 line
     static string SummaryLine  = @"^Tests run: (\d+), Failures: (\d+), Not run: (\d+), Time: .* seconds$";
@@ -12,11 +19,36 @@ public class NUnitColorConsole {
     static string SummaryLine2 = @"^  Not run: \d+, Invalid: \d+, Ignored: (\d+), Skipped: \d+$";
 
     public static void Main(string[] args) {
-        var process = GetProcess(args);
-        process.Start();
-        ProcessOutput(process);
-        process.WaitForExit();
+        StartProcess(args);
+        StartThread();
+        WaitForExit();
     }
+
+    static void StartThread() {
+        outputProcessor = new Thread(ProcessOutput);
+        outputProcessor.Start();
+    }
+
+    // Wait for the background Thread to either:
+    //
+    //  * finish processing output
+    //  * or wait for some duration after the summary has been printed, then exit
+    //
+    // Sometimes when we Read() the process's STDOUT, it blocks for ever so 
+    // we put this in a background thread and only wait for a certain amount of time 
+    // after the summary has printed.
+    //
+    static void WaitForExit() {
+        while (outputProcessor.IsAlive && ! summaryHasPrinted)
+            Thread.Sleep(100); // hang out and wait ...
+
+        while (summaryHasPrinted && outputProcessor.IsAlive && MsSinceLastLinePrinted < msToWaitAfterSummary) {
+            Console.WriteLine("summary has printed and we're still processing ... waiting ... {0} since last line", MsSinceLastLinePrinted);
+            Thread.Sleep(100);
+        }
+    }
+
+    static int MsSinceLastLinePrinted { get { return DateTime.Now.Subtract(lastLinePrintedAt).Milliseconds; }}
 
     static string GetNunitConsoleCommand() {
         if (Environment.GetEnvironmentVariable("NUNIT_CONSOLE") != null)
@@ -25,43 +57,26 @@ public class NUnitColorConsole {
             return "nunit-console";
     }
 
-    static Process GetProcess(string[] args) {
-        var process = new System.Diagnostics.Process();
+    static void StartProcess(string[] args) {
+        process = new System.Diagnostics.Process();
         process.StartInfo.FileName               = GetNunitConsoleCommand();
         process.StartInfo.Arguments              = String.Join(" ", args);
         process.StartInfo.UseShellExecute        = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.CreateNoWindow         = true;
         process.StartInfo.WorkingDirectory       = System.IO.Directory.GetCurrentDirectory();
-        return process;
+        process.Start();
     }
 
-    static void ProcessOutput(Process process) {
-        bool summaryHasPrinted = false;
-        int timesOutputWasNull = 0;
-        int waitTime           = 100;
-        int maxTimesToWait     = 30; // wait 3 seconds for some output
-        bool testCaseFailures  = false;
-        bool testsNotRun       = false;
-        String output          = null;
-        Match  match           = null;
-        String summary         = null;
-        while ((output = process.StandardOutput.ReadLine()) != null || (process.HasExited == false)) {
-            match = null;
-
-            // If we're no longer reading any input and the summary has been printed ... let's get 
-            // ready to stop if things stop responding!
-            if (output == null && summaryHasPrinted) {
-                Console.WriteLine("!!! summary has printed and we got no output ...");
-                timesOutputWasNull++;
-                if (timesOutputWasNull >= maxTimesToWait)
-                    break; // nunit-console is probably done!
-                else {
-                    System.Threading.Thread.Sleep(waitTime);
-                    continue; 
-                }
-            } else
-                timesOutputWasNull = 0;
+    static void ProcessOutput() {
+        bool testCaseFailures = false;
+        bool testsNotRun      = false;
+        String output         = null;
+        Match  match          = null;
+        String summary        = null;
+        while ((output = process.StandardOutput.ReadLine()) != null) {
+            match             = null;
+            lastLinePrintedAt = DateTime.Now;
 
             // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
             //
@@ -78,7 +93,7 @@ public class NUnitColorConsole {
 
                 Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
-                summaryHasPrinted = true;
+                summaryHasPrinted       = true;
 
             // Some versions of NUnit console print out the summary on 2 lines, using different verbiage
             //  
@@ -104,7 +119,7 @@ public class NUnitColorConsole {
                 Console.WriteLine(summary);
                 Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
-                summaryHasPrinted = true;
+                summaryHasPrinted       = true;
 
             // The following lines are all going to be the tests that were not run, so set testsNotRun = true
             } else if (output == "Tests not run:" || output == "Tests Not Run:") {
