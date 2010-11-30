@@ -48,7 +48,7 @@ public class NUnitColorConsole {
         }
     }
 
-    static int MsSinceLastLinePrinted { get { return DateTime.Now.Subtract(lastLinePrintedAt).Milliseconds; }}
+    static long MsSinceLastLinePrinted { get { return (DateTime.Now.Subtract(lastLinePrintedAt).Ticks / 10000); }}
 
     static string GetNunitConsoleCommand() {
         if (Environment.GetEnvironmentVariable("NUNIT_CONSOLE") != null)
@@ -75,12 +75,8 @@ public class NUnitColorConsole {
         Match  match          = null;
         String summary        = null;
         while ((output = process.StandardOutput.ReadLine()) != null) {
-            Console.WriteLine("OUTPUT: {0}", output);
             match             = null;
             lastLinePrintedAt = DateTime.Now;
-            if (summaryHasPrinted) {
-                Console.WriteLine("summary has printed ... we got this line -->{0}<--", output);
-            }
 
             // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
             //
