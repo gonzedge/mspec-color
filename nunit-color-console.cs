@@ -43,10 +43,8 @@ public class NUnitColorConsole {
         while (outputProcessor.IsAlive && ! summaryHasPrinted)
             Thread.Sleep(100); // hang out and wait for the summary to print (or the thread to finish)
 
-        while (summaryHasPrinted && outputProcessor.IsAlive && MsSinceLastLinePrinted < msToWaitAfterSummary) {
-            Console.WriteLine("summary has printed and we're still processing ... waiting ... {0} since last line", MsSinceLastLinePrinted);
-            Thread.Sleep(100);
-        }
+        while (summaryHasPrinted && outputProcessor.IsAlive && MsSinceLastLinePrinted < msToWaitAfterSummary)
+            Thread.Sleep(100); // hang out and wait for X milliseconds to have passed since the last time nunit-console output a line
 
         // Everything should be done!  Let's tell the Thread that we're aborting it and give it 1 second to finish up ... then exit!
         if (outputProcessor.IsAlive) {
