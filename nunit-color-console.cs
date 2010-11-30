@@ -46,6 +46,10 @@ public class NUnitColorConsole {
             Console.WriteLine("summary has printed and we're still processing ... waiting ... {0} since last line", MsSinceLastLinePrinted);
             Thread.Sleep(100);
         }
+
+        // Everything should be done!  Let's kill the thread and exit once it's aborted
+        outputProcessor.Abort();
+        outputProcessor.Join();
     }
 
     static long MsSinceLastLinePrinted { get { return (DateTime.Now.Subtract(lastLinePrintedAt).Ticks / 10000); }}
