@@ -77,6 +77,9 @@ public class NUnitColorConsole {
         while ((output = process.StandardOutput.ReadLine()) != null) {
             match             = null;
             lastLinePrintedAt = DateTime.Now;
+            if (summaryHasPrinted) {
+                Console.WriteLine("summary has printed ... we got this line -->{0}<--", output);
+            }
 
             // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
             //
