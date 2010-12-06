@@ -30,7 +30,7 @@ Running It
 ----------
 
 Any arguments you pass to mspec-color.exe get passed straight to mspec.exe.  So if can alias 'mspec' 
-on your system to 'mspec-color' and commands like `mspec /?` will still run fine.
+on your system to 'mspec-color' and commands like `mspec --help` will still run fine.
 
 By default, `mspec` is run.  If you need to set the path to the mspec executable to be run, you can set the `MSPEC_PATH` environment variable.  If it's found, it will run that instead of simply assuming that `mspec` is in your PATH and will run fine.
 
