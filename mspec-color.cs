@@ -3,7 +3,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-public class NUnitColorConsole {
+public class MSpecColor {
 
     static bool     allTestsPassed       = false;
     static bool     summaryHasPrinted    = false;
@@ -11,13 +11,6 @@ public class NUnitColorConsole {
     static DateTime lastLinePrintedAt    = DateTime.MinValue;
     static Process  process              = null;
     static Thread   outputProcessor      = null;
-
-    // NUnit 2.4.7 displays the summary on 1 line
-    static string SummaryLine  = @"^Tests run: (\d+), Failures: (\d+), Not run: (\d+), Time: .* seconds$";
-
-    // NUnit 2.5.8 displays the summary on 2 lines
-    static string SummaryLine1 = @"^Tests run: (\d+), Errors: (\d+), Failures: (\d+), Inconclusive: \d+, Time: .* seconds$";
-    static string SummaryLine2 = @"^  Not run: \d+, Invalid: \d+, Ignored: (\d+), Skipped: \d+$";
 
     public static void Main(string[] args) {
         StartProcess(args);
@@ -62,10 +55,10 @@ public class NUnitColorConsole {
     static long MsSinceLastLinePrinted { get { return (DateTime.Now.Subtract(lastLinePrintedAt).Ticks / 10000); }}
 
     static string GetNunitConsoleCommand() {
-        if (Environment.GetEnvironmentVariable("NUNIT_CONSOLE") != null)
-            return Environment.GetEnvironmentVariable("NUNIT_CONSOLE");
+        if (Environment.GetEnvironmentVariable("MSPEC_PATH") != null)
+            return Environment.GetEnvironmentVariable("MSPEC_PATH");
         else
-            return "nunit-console";
+            return "mspec";
     }
 
     static void StartProcess(string[] args) {
@@ -80,102 +73,47 @@ public class NUnitColorConsole {
     }
 
     static void ProcessOutput() {
-        bool testCaseFailures = false;
-        bool testsNotRun      = false;
-        String output         = null;
-        Match  match          = null;
-        String summary        = null;
+	int failed     = 0;
+	int pending    = 0;
+	int passed     = 0;
+        String output  = null;
         while ((output = process.StandardOutput.ReadLine()) != null) {
-            match             = null;
             lastLinePrintedAt = DateTime.Now;
 
-            // We're printing out the summary line.  Color it based on if everything passed, there were failures, or nothing ran
-            //
-            //   Tests run: 7, Failures: 1, Not run: 8, Time: 0.411 seconds
-            //
-            if ((match = Regex.Match(output, SummaryLine)).Success) {
-                var run     = int.Parse(match.Groups[1].Value);
-                var fails   = int.Parse(match.Groups[2].Value);
-                var pending = int.Parse(match.Groups[3].Value);
-
-                if      (fails > 0) Console.ForegroundColor = ConsoleColor.Red;
-                else if (run > 0)   Console.ForegroundColor = ConsoleColor.Green;
-                else                Console.ForegroundColor = ConsoleColor.Yellow;
-
-                if (Console.ForegroundColor == ConsoleColor.Green) allTestsPassed = true;
-
-                Console.WriteLine(output);
-                Console.ForegroundColor = ConsoleColor.White;
-                summaryHasPrinted       = true;
-
-            // Some versions of NUnit console print out the summary on 2 lines, using different verbiage
-            //  
-            //   Tests run: 7, Errors: 0, Failures: 1, Inconclusive: 0, Time: 0.2217072 seconds
-            //     Not run: 8, Invalid: 0, Ignored: 8, Skipped: 0
-            //   
-            } else if ((match = Regex.Match(output, SummaryLine1)).Success) {
-                summary = output; // we can't print out the results until we read the second line of the summary
-
-            // The second line of the summary (in some versions of NUnit console)
-            } else if ((match = Regex.Match(output, SummaryLine2)).Success) {
-                var summaryMatch = Regex.Match(summary, SummaryLine1);
-
-                var run     = int.Parse(summaryMatch.Groups[1].Value);
-                var errors  = int.Parse(summaryMatch.Groups[2].Value);
-                var fails   = int.Parse(summaryMatch.Groups[3].Value);
-                var pending = int.Parse(match.Groups[1].Value);
-
-                if      (errors > 0 || fails > 0) Console.ForegroundColor = ConsoleColor.Red;
-                else if (run > 0)                 Console.ForegroundColor = ConsoleColor.Green;
-                else                              Console.ForegroundColor = ConsoleColor.Yellow;
-
-                if (Console.ForegroundColor == ConsoleColor.Green) allTestsPassed = true;
-
-                Console.WriteLine(summary);
-                Console.WriteLine(output);
-                Console.ForegroundColor = ConsoleColor.White;
-                summaryHasPrinted       = true;
-
-            // The following lines are all going to be the tests that were not run, so set testsNotRun = true
-            } else if (output == "Tests not run:" || output == "Tests Not Run:") {
-                Console.WriteLine(output);
-                testsNotRun = true;
-
-            // The following lines are all going to be the test case failures
-            } else if (output == "Test Case Failures:" || output == "Errors and Failures:") {
-                Console.WriteLine(output);
-                testCaseFailures = true;
-
-            // We're printing out the section of [Ignore] tests (tests not run)
-            } else if (testsNotRun) {
-                match = Regex.Match(output, @"^(\d+)\) ([^:]+) : (.*)$");
-                if (match.Success) {
-                    var testNumber   = match.Groups[1].Value;
-                    var testName     = match.Groups[2].Value;
-                    var ignoreReason = match.Groups[3].Value;
-
-                    // on some versions of NUnit console, it displays 1) Ignored : TestName
-                    if (testName == "Ignored") {
-                        testName     = ignoreReason;
-                        ignoreReason = "";
-                    }
-
-                    // Set a default [Ignore] reason if the user didn't specify one
-                    if (ignoreReason.Trim().Length == 0)
-                        ignoreReason = "Pending (Not Yet Implemented)";
-
-                    Console.Write("{0}) ", testNumber);
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write(testName);
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(" : {0}", ignoreReason);
-                }
-
-            // We're printing out the section of failures
-            } else if (testCaseFailures) {
+	    // Failed example
+	    // All lines after this up until another spec or a blank line should be red too
+	    if (output.StartsWith("» ") && output.EndsWith("(FAIL)")) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(output);
+		failed++;
+
+	    // Pending example
+	    } else if (output.StartsWith("» ") && output.EndsWith("(NOT IMPLEMENTED)")) {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(output);
                 Console.ForegroundColor = ConsoleColor.White;
+		pending++;
+
+	    // If it's not a (FAIL) and it's not (NOT IMPLEMENTED), then it's green!
+	    } else if (output.StartsWith("» ")) {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(output);
+                Console.ForegroundColor = ConsoleColor.White;
+		passed++;
+
+	    // Looks like we're printing out the summary line(s).
+	    // Color the rest of the lines based on whether there were any failures / pending examples.
+	    } else if (output.StartsWith("Contexts: ")) {
+		if (failed > 0)
+		    Console.ForegroundColor = ConsoleColor.Red;
+		else if (pending > 0)
+		    Console.ForegroundColor = ConsoleColor.Yellow;
+		else if (passed > 0)
+		    Console.ForegroundColor = ConsoleColor.Green;
+		else
+		    Console.ForegroundColor = ConsoleColor.Yellow; // no specs?
+
+                Console.WriteLine(output);
 
             // None of the conditions hit ... simply print out the line!
             } else {
