@@ -24,7 +24,7 @@ public class MSpecColor {
 
     static void ResetConsoleColorBackToOriginal() {
         Console.ForegroundColor = originalColor;
-	Console.WriteLine(""); // write the color to the console
+	//Console.WriteLine(""); // write the color to the console
     }
 
     static void StartThread() {
@@ -101,14 +101,14 @@ public class MSpecColor {
 	    } else if (output.StartsWith("» ") && output.EndsWith("(NOT IMPLEMENTED)")) {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(output);
-                Console.ForegroundColor = ConsoleColor.White;
+                Console.ForegroundColor = originalColor;
 		pending++;
 
 	    // If it's not a (FAIL) and it's not (NOT IMPLEMENTED), then it's green!
 	    } else if (output.StartsWith("» ")) {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(output);
-                Console.ForegroundColor = ConsoleColor.White;
+                Console.ForegroundColor = originalColor;
 		passed++;
 
 	    // Looks like we're printing out the summary line(s).
