@@ -24,7 +24,6 @@ public class MSpecColor {
 
     static void ResetConsoleColorBackToOriginal() {
         Console.ForegroundColor = originalColor;
-	//Console.WriteLine(""); // write the color to the console
     }
 
     static void StartThread() {
