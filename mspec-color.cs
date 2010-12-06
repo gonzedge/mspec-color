@@ -5,21 +5,24 @@ using System.Text.RegularExpressions;
 
 public class MSpecColor {
 
-    static bool     allTestsPassed       = false;
-    static bool     summaryHasPrinted    = false;
-    static int      msToWaitAfterSummary = 2000;
-    static DateTime lastLinePrintedAt    = DateTime.MinValue;
-    static Process  process              = null;
-    static Thread   outputProcessor      = null;
+    static bool         allTestsPassed       = false;
+    static bool         summaryHasPrinted    = false;
+    static int          msToWaitAfterSummary = 2000;
+    static DateTime     lastLinePrintedAt    = DateTime.MinValue;
+    static Process      process              = null;
+    static Thread       outputProcessor      = null;
+    static ConsoleColor originalColor;
 
     public static void Main(string[] args) {
-        var originalColor = Console.ForegroundColor;
+        originalColor = Console.ForegroundColor;
 	
 	StartProcess(args);
         StartThread();
         WaitForExit();
+	ResetConsoleColorBackToOriginal();
+    }
 
-	// Nomatter what, reset the Console.ForegroundColor!
+    static void ResetConsoleColorBackToOriginal() {
         Console.ForegroundColor = originalColor;
 	Console.WriteLine(""); // write the color to the console
     }
@@ -52,6 +55,7 @@ public class MSpecColor {
         }
 
         // Exit with non-0 exit code unless all of the tests passed
+	ResetConsoleColorBackToOriginal();
         if (allTestsPassed)
             Environment.Exit(0);
         else
