@@ -37,7 +37,7 @@ public class MSpecColor {
             Thread.Sleep(100); // hang out and wait for the summary to print (or the thread to finish)
 
         while (summaryHasPrinted && outputProcessor.IsAlive && MsSinceLastLinePrinted < msToWaitAfterSummary)
-            Thread.Sleep(100); // hang out and wait for X milliseconds to have passed since the last time nunit-console output a line
+            Thread.Sleep(100); // hang out and wait for X milliseconds to have passed since the last time mspec.exe output a line
 
         // Everything should be done!  Let's tell the Thread that we're aborting it and give it 1 second to finish up ... then exit!
         if (outputProcessor.IsAlive) {
@@ -54,7 +54,7 @@ public class MSpecColor {
 
     static long MsSinceLastLinePrinted { get { return (DateTime.Now.Subtract(lastLinePrintedAt).Ticks / 10000); }}
 
-    static string GetNunitConsoleCommand() {
+    static string GetMspecConsoleCommand() {
         if (Environment.GetEnvironmentVariable("MSPEC_PATH") != null)
             return Environment.GetEnvironmentVariable("MSPEC_PATH");
         else
@@ -63,7 +63,7 @@ public class MSpecColor {
 
     static void StartProcess(string[] args) {
         process = new System.Diagnostics.Process();
-        process.StartInfo.FileName               = GetNunitConsoleCommand();
+        process.StartInfo.FileName               = GetMspecConsoleCommand();
         process.StartInfo.Arguments              = String.Join(" ", args);
         process.StartInfo.UseShellExecute        = false;
         process.StartInfo.RedirectStandardOutput = true;
