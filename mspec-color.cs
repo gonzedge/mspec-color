@@ -13,9 +13,14 @@ public class MSpecColor {
     static Thread   outputProcessor      = null;
 
     public static void Main(string[] args) {
-        StartProcess(args);
+        var originalColor = Console.ForegroundColor;
+	
+	StartProcess(args);
         StartThread();
         WaitForExit();
+
+	// Nomatter what, reset the Console.ForegroundColor!
+        Console.ForegroundColor = originalColor;
     }
 
     static void StartThread() {
